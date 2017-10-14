@@ -55,7 +55,7 @@ void setup()
   pinMode(pinRotaryEncoderButton, INPUT_PULLUP);
 
   lcd.begin(20, 4);
-  lcd_print(0, "FireBALL 17B1008");
+  lcd_print(0, "FireBALL 17B1014");
 
   motorE2.disable();
   motorX.disable();
@@ -82,10 +82,10 @@ void loop()
 void testMotor() {
   for ( int i = 0; i < 1000; i++ ) {
     lcd_print(1, "move 1");
-    motorMove( 100    , motorX , motorE2);
+    motorMove( 200    , motorX , motorE2);
     delay (2000);
     lcd_print(1, "move 2");
-    motorMove( -100,    motorX, motorE2);
+    motorMove( -200,    motorX, motorE2);
     delay (2000);
   }
 }
@@ -94,7 +94,7 @@ void testMotor() {
 void motorMove(int offset, RepStepper a, RepStepper b) {
   int scale = 32;
   int s1 = 2000 ;
-  int s2 = 1000;
+  int s2 = 1500;
   float dist = 10 * scale;
   offset = offset * scale;
 
@@ -311,7 +311,7 @@ int readRotaryEncoder(int value) {
 
 
 
-int motorStep(int x, int S1, int S2 ) {
+int motorStep99(int x, int S1, int S2 ) {
   int speed = 0;
   int step = x / 10;
   if ( step < 80) {
