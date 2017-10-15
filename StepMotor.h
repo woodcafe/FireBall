@@ -7,6 +7,7 @@
 #include <Wire.h>
 
 // commands
+
 #define LCD_CLEARDISPLAY 0x01
 #define LCD_RETURNHOME 0x02
 #define LCD_ENTRYMODESET 0x04
