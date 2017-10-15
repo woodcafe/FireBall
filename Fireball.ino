@@ -71,20 +71,29 @@ void loop()
 // ** TUNNING MOTORS
 // ******************************************
 
-// 800=150mm,
+// 800 = 160mm,
+// 5 = 10mm
 
-int tun_dist = 800  ;
+int tun_dist = 10 * 50  ;
 void testMotor() {
-  for ( int i = 0; i < 1000; i++ ) {
-    lcd_print(1, "MOVER(1) ");
-    moveY( tun_dist,   motorY);
-    moveX( tun_dist, motorX , motorE2 );
-    delay (2000);
-    lcd_print(1, "MOVE(2) ");
-    moveY( tun_dist * -1,  motorY);
-    moveX( tun_dist * -1,  motorX, motorE2 );
-    delay (2000);
+  for ( int x = 0; x < 50; x++) {
+    lcd_print(1, "x = %03d", x);
+    for ( int y = 0; y < 50; y++ ) {
+      lcd_print(2, "y = %03d", y);
+      moveY( 10 * 5,   motorY);
+      drawBox(0, 0);
+    }
+    moveX( 10 * 5, motorX , motorE2 );
+    moveY( 1000 * 5 * -1,   motorY);
   }
+}
+
+void drawBox(int x, int y ) {
+  int size = 9 * 5;
+  moveX( size  ,  motorX, motorE2 );
+  moveY( size,   motorY);
+  moveX( size * -1,  motorX, motorE2 );
+  moveY( size * -1,  motorY);
 }
 
 const  int SPEED_0 = 2000 ;
@@ -226,6 +235,15 @@ void debugf (char* format, int value ) {
 }
 
 void lcd_print(int row,  char* format , long value) {
+  char buf[20];
+  char buf2[20];
+  lcd.setCursor(0, row);
+  sprintf (buf, format,   value);
+  lcd.print(buf);
+}
+
+
+void lcd_print(int row,  char* format , int value) {
   char buf[20];
   char buf2[20];
   lcd.setCursor(0, row);
