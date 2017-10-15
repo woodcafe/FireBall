@@ -60,9 +60,9 @@ int offset = 0;
 void loop()
 {
   testMotor();
-  lcd_print(1, value);
+  //  lcd_print(1, value);
   value = readRotaryEncoder(value);
-  lcd_print(1, value);
+  //  lcd_print(1, value);
   offset = value - prev;
   prev = value;
 }
@@ -79,53 +79,59 @@ void testMotor() {
     lcd_print(1, "MOVER(1) ");
     motorMove( tun_dist    , motorX , motorE2, motorY);
     delay (2000);
-    lcd_print(1, "MOVE(2) ");
+     lcd_print(1, "MOVE(2) ");
     motorMove( tun_dist * -1,    motorX, motorE2, motorY);
     delay (2000);
   }
 }
-//1500.10
+
+const  int SPEED_0 = 2000 ;
+const  int SPEED_2 = 1500;
+const  int SPEED_SCALE = 16; // 1/16 step
+const  int SPEED_DISTANCE = 10 * SPEED_SCALE;
+const  int SPEED_K   = ((SPEED_0 - SPEED_2) / SPEED_DISTANCE);
+
+int speed_cal( int pos, long offset ) {
+  int speed =0;
+  int r = pos - ( offset - SPEED_DISTANCE)  ;
+  if ( pos < SPEED_DISTANCE ) {
+    speed = SPEED_0 - (SPEED_K  * pos) ;
+  } else if ( r > 0) {
+    speed = SPEED_2 + (SPEED_K * r );
+  }
+  if ( pos >= SPEED_DISTANCE && r <= 0 ) {
+    speed = SPEED_2;
+  }
+  return speed;
+}
 
 void motorMove(long offset, RepStepper a, RepStepper b, RepStepper c) {
-  int scale = 16;
-  int s1 = 2000 ;
-  int s2 = 1500;
-  float dist = 10 * scale;
-  offset = offset * scale;
-
+  offset = offset * SPEED_SCALE;
   if ( offset > 0 ) {
     a.setDirection(RS_FORWARD);
     b.setDirection(RS_REVERSE);
     c.setDirection(RS_REVERSE);
-    lcd_print(2, "Forwarding %ld ", offset);
-    Serial.println("offset-1 = ");
-    Serial.println(offset);
   } else {
     a.setDirection(RS_REVERSE);
     b.setDirection(RS_FORWARD);
     c.setDirection(RS_FORWARD);
-    lcd_print(2, "Reverse   %ld ", offset);
-    Serial.println("offset-2 = ");
-    Serial.println(offset);
     offset *= -1;
   }
 
-  int speed = 0;
-  float k = ((s1 - s2) / dist);
   for ( long s = 0; s < offset; s++ ) {
-    int r = s - ( offset - dist)  ;
-    if ( s < dist ) {
-      speed = s1 - (k  * s) ;
-    } else if ( r > 0) {
-      speed = s2 + (k  * r );
-    }
-    if ( s >= dist && r <= 0 ) {
-      speed = s2;
-    }
+//    int r = s - ( offset - SPEED_DISTANCE)  ;
+//    if ( s < SPEED_DISTANCE ) {
+//      speed = SPEED_0 - (SPEED_K  * s) ;
+//    } else if ( r > 0) {
+//      speed = SPEED_2 + (SPEED_K * r );
+//    }
+//    if ( s >= SPEED_DISTANCE && r <= 0 ) {
+//      speed = SPEED_2;
+//    }
     a.pulse();
     b.pulse();
     c.pulse();
-    delayMicroseconds(speed);
+    delayMicroseconds(speed_cal(s, offset));
   }
 }
 
@@ -141,8 +147,8 @@ void manualTestMotor() {
   int scale = 10;
   boolean motorFlag = false;
 
-  lcd_print (1, "scale", scale / (float)10);
-  lcd_print (2, "posi", pos / (float)100);
+  //  lcd_print (1, "scale", scale / (float)10);
+  //  lcd_print (2, "posi", pos / (float)100);
   while (1) {
 
     int u = readRotaryEncoder(100);
@@ -152,7 +158,7 @@ void manualTestMotor() {
         if (scale <= 0.1   ) {
           scale = 1000;
         }
-        lcd_print (1, "scale", scale / (float)10);
+        //        lcd_print (1, "scale", scale / (float)10);
         break;
       case 2: // Control Motor
         if ( motorFlag ) {
@@ -167,13 +173,13 @@ void manualTestMotor() {
         break;
       case 1:
         pos += (10 * scale);
-        lcd_print (2, "posi",  pos / (float)100);
+        //        lcd_print (2, "posi",  pos / (float)100);
         //        if ( motorFlag )
         //          moveMotor(10  * scale , true);
         break;
       case -1:
         pos +=  (-10 * scale);
-        lcd_print (2, "posi", pos / (float)100);
+        //        lcd_print (2, "posi", pos / (float)100);
         //        if ( motorFlag)
         //          moveMotor(-10 * scale , true );
         break;
@@ -282,7 +288,7 @@ int readRotaryEncoder(int value) {
 
 
 
-int motorStep99(int x, int S1, int S2 ) {
+int motorStep99(int x, int SPEED_0, int SPEED_2 ) {
   int speed = 0;
   int step = x / 10;
   if ( step < 80) {
@@ -291,14 +297,14 @@ int motorStep99(int x, int S1, int S2 ) {
     speed = 300;
   }
   speed += 500;
-  if (S2 != 0 ) {
-    digitalWrite(S2, 1); // Output high
+  if (SPEED_2 != 0 ) {
+    digitalWrite(SPEED_2, 1); // Output high
   }
-  digitalWrite(S1, HIGH); // Output high
+  digitalWrite(SPEED_0, HIGH); // Output high
   delayMicroseconds(speed); // Wait 1/2 a ms (변경하여 속도 조절 가능) =500
-  digitalWrite(S1, LOW); // Output low
-  if (S2 != 0 ) {
-    digitalWrite(S2, 0); // Output high
+  digitalWrite(SPEED_0, LOW); // Output low
+  if (SPEED_2 != 0 ) {
+    digitalWrite(SPEED_2, 0); // Output high
   }
   delayMicroseconds(speed); // Wait 1/2 a ms
 }
