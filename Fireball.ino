@@ -23,15 +23,8 @@ enum RotaryEncoder {
   pinRotaryEncoderButton = 35
 };
 
-//const int motorSpeed = 250;//700
-
-// 1000=250
-//4pluse 1mill
-//2.5
-
 int posCur = 0;
 int arrCur = 0;
-
 
 void setup()
 {
@@ -60,9 +53,7 @@ int offset = 0;
 void loop()
 {
   testMotor();
-  //  lcd_print(1, value);
   value = readRotaryEncoder(value);
-  //  lcd_print(1, value);
   offset = value - prev;
   prev = value;
 }
@@ -71,8 +62,7 @@ void loop()
 // ** TUNNING MOTORS
 // ******************************************
 
-// 800 = 160mm,
-// 5 = 10mm
+// 800 = 160mm, 5 = 10mm
 
 int tun_dist = 10 * 50  ;
 void testMotor() {
@@ -228,12 +218,6 @@ void lcd_print(int row, char* format, float value) {
   lcd.print(buf);
 }
 
-void debugf (char* format, int value ) {
-  char buf[20];
-  sprintf (buf,  format, value);
-  Serial.println(buf);
-}
-
 void lcd_print(int row,  char* format , long value) {
   char buf[20];
   char buf2[20];
@@ -242,7 +226,6 @@ void lcd_print(int row,  char* format , long value) {
   lcd.print(buf);
 }
 
-
 void lcd_print(int row,  char* format , int value) {
   char buf[20];
   char buf2[20];
@@ -250,6 +233,13 @@ void lcd_print(int row,  char* format , int value) {
   sprintf (buf, format,   value);
   lcd.print(buf);
 }
+
+void debugf (char* format, int value ) {
+  char buf[20];
+  sprintf (buf,  format, value);
+  Serial.println(buf);
+}
+
 
 int readRotaryEncoder(int value) {
   unsigned long currentTime;
