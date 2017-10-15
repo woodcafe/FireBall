@@ -77,10 +77,12 @@ int tun_dist = 800  ;
 void testMotor() {
   for ( int i = 0; i < 1000; i++ ) {
     lcd_print(1, "MOVER(1) ");
-    motorMove( tun_dist    , motorX , motorE2, motorY);
+    moveY( tun_dist,   motorY);
+    moveX( tun_dist, motorX , motorE2 );
     delay (2000);
-     lcd_print(1, "MOVE(2) ");
-    motorMove( tun_dist * -1,    motorX, motorE2, motorY);
+    lcd_print(1, "MOVE(2) ");
+    moveY( tun_dist * -1,  motorY);
+    moveX( tun_dist * -1,  motorX, motorE2 );
     delay (2000);
   }
 }
@@ -92,7 +94,7 @@ const  int SPEED_DISTANCE = 10 * SPEED_SCALE;
 const  int SPEED_K   = ((SPEED_0 - SPEED_2) / SPEED_DISTANCE);
 
 int speed_cal( int pos, long offset ) {
-  int speed =0;
+  int speed = 0;
   int r = pos - ( offset - SPEED_DISTANCE)  ;
   if ( pos < SPEED_DISTANCE ) {
     speed = SPEED_0 - (SPEED_K  * pos) ;
@@ -105,32 +107,33 @@ int speed_cal( int pos, long offset ) {
   return speed;
 }
 
-void motorMove(long offset, RepStepper a, RepStepper b, RepStepper c) {
+void moveX(long offset, RepStepper a, RepStepper b) {
   offset = offset * SPEED_SCALE;
   if ( offset > 0 ) {
     a.setDirection(RS_FORWARD);
     b.setDirection(RS_REVERSE);
-    c.setDirection(RS_REVERSE);
   } else {
     a.setDirection(RS_REVERSE);
     b.setDirection(RS_FORWARD);
-    c.setDirection(RS_FORWARD);
     offset *= -1;
   }
-
   for ( long s = 0; s < offset; s++ ) {
-//    int r = s - ( offset - SPEED_DISTANCE)  ;
-//    if ( s < SPEED_DISTANCE ) {
-//      speed = SPEED_0 - (SPEED_K  * s) ;
-//    } else if ( r > 0) {
-//      speed = SPEED_2 + (SPEED_K * r );
-//    }
-//    if ( s >= SPEED_DISTANCE && r <= 0 ) {
-//      speed = SPEED_2;
-//    }
     a.pulse();
     b.pulse();
-    c.pulse();
+    delayMicroseconds(speed_cal(s, offset));
+  }
+}
+
+void moveY(long offset, RepStepper a ) {
+  offset = offset * SPEED_SCALE;
+  if ( offset > 0 ) {
+    a.setDirection(RS_FORWARD);
+  } else {
+    a.setDirection(RS_REVERSE);
+    offset *= -1;
+  }
+  for ( long s = 0; s < offset; s++ ) {
+    a.pulse();
     delayMicroseconds(speed_cal(s, offset));
   }
 }
