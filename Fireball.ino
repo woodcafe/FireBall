@@ -64,7 +64,7 @@ void loop()
 
 // 800 = 160mm, 5 = 10mm
 
-int tun_dist = 10 * 50  ;
+int tun_dist = 10 * 50  ;//
 void testMotor() {
   for ( int x = 0; x < 50; x++) {
     lcd_print(1, "x = %03d", x);
