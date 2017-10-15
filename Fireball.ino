@@ -23,45 +23,35 @@ enum RotaryEncoder {
   pinRotaryEncoderButton = 35
 };
 
-
-
 //const int motorSpeed = 250;//700
-
-
 
 // 1000=250
 //4pluse 1mill
 //2.5
 
-
-
 int posCur = 0;
 int arrCur = 0;
-int FIT = 0;
-int dado = 260;
-
 
 
 void setup()
 {
+  lcd.begin(20, 4);
+  lcd_print(0, "FireBALL 17B1015-1");
 
   Serial.begin(9600);
   Serial.println("Program Start()");
-
-  // BASIC IO
   pinMode(pinBuzz, OUTPUT);
   pinMode(pinRotaryEncoderA, INPUT_PULLUP);
   pinMode(pinRotaryEncoderB, INPUT_PULLUP);
   pinMode(pinRotaryEncoderButton, INPUT_PULLUP);
-
-  lcd.begin(20, 4);
-  lcd_print(0, "FireBALL 17B1014");
-
   motorE2.disable();
   motorX.disable();
-
-  Serial.println("motor.enable()");
+  motorY.disable();
 }
+
+// ******************************************
+// *** CONFIG
+// ******************************************
 
 int value = 1000;
 int prev = value;
@@ -74,25 +64,30 @@ void loop()
   value = readRotaryEncoder(value);
   lcd_print(1, value);
   offset = value - prev;
-
-  Serial.println("mvoe..=========================");
   prev = value;
 }
 
+// ******************************************
+// ** TUNNING MOTORS
+// ******************************************
+
+// 800=150mm,
+
+int tun_dist = 800  ;
 void testMotor() {
   for ( int i = 0; i < 1000; i++ ) {
-    lcd_print(1, "move 1");
-    motorMove( 200    , motorX , motorE2);
+    lcd_print(1, "MOVER(1) ");
+    motorMove( tun_dist    , motorX , motorE2, motorY);
     delay (2000);
-    lcd_print(1, "move 2");
-    motorMove( -200,    motorX, motorE2);
+    lcd_print(1, "MOVE(2) ");
+    motorMove( tun_dist * -1,    motorX, motorE2, motorY);
     delay (2000);
   }
 }
+//1500.10
 
-// 8401 300->20 at 32 scale
-void motorMove(int offset, RepStepper a, RepStepper b) {
-  int scale = 32;
+void motorMove(long offset, RepStepper a, RepStepper b, RepStepper c) {
+  int scale = 16;
   int s1 = 2000 ;
   int s2 = 1500;
   float dist = 10 * scale;
@@ -101,15 +96,23 @@ void motorMove(int offset, RepStepper a, RepStepper b) {
   if ( offset > 0 ) {
     a.setDirection(RS_FORWARD);
     b.setDirection(RS_REVERSE);
+    c.setDirection(RS_REVERSE);
+    lcd_print(2, "Forwarding %ld ", offset);
+    Serial.println("offset-1 = ");
+    Serial.println(offset);
   } else {
     a.setDirection(RS_REVERSE);
     b.setDirection(RS_FORWARD);
+    c.setDirection(RS_FORWARD);
+    lcd_print(2, "Reverse   %ld ", offset);
+    Serial.println("offset-2 = ");
+    Serial.println(offset);
     offset *= -1;
   }
 
   int speed = 0;
   float k = ((s1 - s2) / dist);
-  for ( int s = 0; s < offset; s++ ) {
+  for ( long s = 0; s < offset; s++ ) {
     int r = s - ( offset - dist)  ;
     if ( s < dist ) {
       speed = s1 - (k  * s) ;
@@ -119,20 +122,12 @@ void motorMove(int offset, RepStepper a, RepStepper b) {
     if ( s >= dist && r <= 0 ) {
       speed = s2;
     }
-    b.pulse();
     a.pulse();
+    b.pulse();
+    c.pulse();
     delayMicroseconds(speed);
   }
 }
-
-////////////////////////////////////////////////////////////////
-///////
-////////////////////////////////////////////////////////////////
-
-
-// 1) How many pulse are needs to move milimeters
-// 2) How can we measure accurency long range & short range
-// 3) How can express, blade margin
 
 
 // ***********************************************************
@@ -186,31 +181,8 @@ void manualTestMotor() {
   }
 }
 
-
-
-
-/////////////////////////////////////////////////////
-
-
-
 unsigned int encoderPos = 0;
 unsigned int lastReportedPos = 1;
-
-
-
-void setting(int x, int y ) {
-  int  r = 1;
-  int value = 0;
-  char buf[20];
-  while ( r != 0 ) {
-    lcd.setCursor(x, y);
-    sprintf(buf, "SAW %03d", value);
-    lcd.print(buf);
-    r = readRotaryEncoder(100);
-    value += r;
-  }
-
-}
 
 // *********************************************************************
 // *********************************************************************
@@ -244,12 +216,11 @@ void debugf (char* format, int value ) {
   Serial.println(buf);
 }
 
-void lcd_print(int row,  int value) {
+void lcd_print(int row,  char* format , long value) {
   char buf[20];
   char buf2[20];
   lcd.setCursor(0, row);
-  dtostrf(value, 3, 1, buf2);
-  sprintf (buf, "%5s = %5s", "value", buf2);
+  sprintf (buf, format,   value);
   lcd.print(buf);
 }
 
