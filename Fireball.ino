@@ -33,39 +33,111 @@ int value = 1000;
 int prev = value;
 int offset = 0;
 
+int conId = 0;
 
-String remain;
-int getInt(String debug, String mark) {
-  //  Serial.println(debug);
-  String value = remain.substring(0, remain.indexOf(mark));
-  // Serial.println( value.c_str());
-  remain = remain.substring(remain.indexOf(mark) + 1, remain.length() ); // add marker size
-  // Serial.println( remain.c_str());
-  return value.toInt();
+#define MSIZE 512
+char rxBuf[MSIZE] = "999 +IPD,4,38:G1 X10.111232 Y-20.224455 Z30.9366644";
+char txBuf[MSIZE];
+//char tmpBuf[100];
+char msgBuf[MSIZE];
+
+
+// ##############################################################
+// ## BUF SUPPORT
+// ##############################################################
+
+int length(char buf[]) {
+  for (int i = 0; i < 255; i++) {
+    if ( buf[i] == 0 ) {
+      return i;
+    }
+  }
+  return 255;
 }
 
-float getCodeFloat(String debug, String mark) {
-  //  Serial.println(debug);
-  String value = remain.substring(1, remain.indexOf(mark));
-  // Serial.println( value.c_str());
-  remain = remain.substring(remain.indexOf(mark) + 1, remain.length() ); // add marker size
-  // Serial.println( remain.c_str());
-  float v = value.toFloat();
-  return v;
+int indexOf(char buf[], char findWord[]  ) {
+  int size = length(findWord);
+  int max = length(buf);
+  if ( size > max ) {
+    return -3;
+  }
+  for (int i = 0; i < max - size; i++ ) {
+    if ( buf[i] == findWord[0] ) {
+      if ( size == 1 ) {
+        return i;
+      } else {
+        for (int j = 1; j < size; j++) {
+          if ( buf[j + i] == findWord[j] ) {
+            if ( j == (size - 1) ) return i;
+          }
+        } // for
+      }
+    }
+  }
+  return -1;
+}
+
+int sp = 0;
+
+int scanInt(char debug[], char mark[]) {
+  int pos = indexOf(&rxBuf[sp], mark);
+  rxBuf[sp + pos] = 0;
+  int value = atoi(&rxBuf[sp]);
+ // sprintf(msgBuf, "\n <%s>=<int:%d> from <%s>", debug,  value, &rxBuf[sp]);
+ // Serial.print(msgBuf);
+  sp += pos + length(mark);
+  return value;
+}
+
+float scanFloat(char debug[], char mark[]) {
+  char buf2[10];
+  int pos = indexOf(&rxBuf[sp], mark);
+  rxBuf[sp + pos] = 0;
+  float value = atof(&rxBuf[sp]);
+  dtostrf(value, 9, 6, buf2);
+   sprintf(msgBuf, "\n <%s>=<float:%s> from <%s> = freeRam =%d", debug,  buf2, &rxBuf[sp], freeRam());
+   Serial.print(msgBuf);
+  sp += pos + length(mark);
+  return value;
+}
+
+int freeRam ()
+{
+  extern int __heap_start, *__brkval;
+  int v;
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+}
+
+boolean parsePDU(char buf[]) {
+  int cp = indexOf(&rxBuf[0], "+IPD,");
+  if ( cp > 0 ) {
+    sp = cp + 5;
+    conId = scanInt("ConID", ",");
+    scanInt("Length", ":");
+    sp ++;
+    scanInt("G-Code", " ");
+    sp ++;
+    float x = scanFloat("X axis", " ");
+    sp ++;
+    float y = scanFloat("Y axis", " ");
+    sp ++;
+    float z =  scanFloat("Z axis", " ");
+    lcd_print(1, "X ", x);
+    lcd_print(2, "Y ", y);
+    lcd_print(3, "Z ", z);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 void setup()
 {
   Serial.begin(9600);
   Serial.println("Program Start()");
-  //  String s = "999 +IPD,0,38:G1 X10.111232 Y-20.224455 Z30.9366644";
-  //  Serial.println(  s.c_str());
-
-
-
 
   lcd.begin(20, 4);
-  lcd_print(0, "FireBALL 17B1015-1");
+  lcd_print(0, "FireBall V1.00 17W48");
 
   wcon.begin();
   pinMode(pinBuzz, OUTPUT);
@@ -75,32 +147,20 @@ void setup()
   motorE2.disable();
   motorX.disable();
   motorY.disable();
-   
-}
 
-char buf[512];
+}
 
 void loop()
 {
 
   //  wcon.testTerminal();
-  int count = wcon.rxPDU(buf, 200);
+  int count = wcon.rxPDU(rxBuf, 200);
   if ( count > 0 ) {
-    remain = String(buf);
-    remain = remain.substring(remain.indexOf("+IPD,") + 5, remain.length());
-    int conId = getInt("conid", ",");
-    int length = getInt("length", ":");
-    float g = getCodeFloat("G", " ");
-    float x = getCodeFloat("X", " ");
-    float y = getCodeFloat("Y", " ");
-    float z = getCodeFloat("Z", " ");
-    lcd_print(1, "x =", x);
-    lcd_print(2, "x =", y);
-    lcd_print(3, "x =", z);
-
-    moveY( y,   motorY);
-
-    wcon.txPDU("OK RECEVED", count, conId);
+    if ( parsePDU(rxBuf)) {
+      String s = String("hello !!!!");
+      wcon.txPDU(s, conId);
+    }
+    //    moveY( y,   motorY);
   }
   return;
   lcd_print(1, "1) TEMINAL MODE");
@@ -266,8 +326,8 @@ void lcd_print(int row, char* format, float value) {
   char buf[20];
   char buf2[20];
   lcd.setCursor(0, row);
-  dtostrf(value, 3, 1, buf2);
-  sprintf (buf, "%5s = %5s mm", format, buf2);
+  dtostrf(value, 10, 6, buf2);
+  sprintf (buf, "%-3s = %9s mm", format, buf2);
   lcd.print(buf);
 }
 
@@ -372,4 +432,5 @@ int motorStep99(int x, int SPEED_0, int SPEED_2 ) {
   }
   delayMicroseconds(speed); // Wait 1/2 a ms
 }
+
 

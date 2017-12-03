@@ -14,12 +14,12 @@ class WIFI8266 {
     WIFI8266(int rxpin, int txpin);
     void begin();
     void testTerminal();
-    void txPDU(String s, int length, int conId );
+    void txPDU(String msg, int conId );
     int  rxPDU(char dstBuf[], int size);
     void clear();
     int  copyBuf(char dstBuf[], int size);
     int WIFI8266:: pullBufferTill(int timeout, char dstBuf[], char findWord[], int findSize);
-    void sendData(String command, const int timeout, boolean debug);
+    void sendData(char dstBuf[], const int timeout, boolean debug);
     void clearEspBuffer();
     int  flushEspBuffer( int timeout) ;
 
@@ -29,7 +29,7 @@ class WIFI8266 {
     int pushBuf( int timeout );
     int indexAfter( int sp, char wd[], int size );
     String substring( int sp, int ep );
-     
+
 };
 
 #endif
