@@ -1,6 +1,6 @@
 //YWROBOT
-#ifndef StepMotor_h
-#define StepMotor_h
+#ifndef RotaryEncoder_h
+#define RotaryEncoder_h
 
 #include <inttypes.h>
 #include "Print.h"
@@ -52,9 +52,9 @@
 #define Rw B00000010  // Read/Write bit
 #define Rs B00000001  // Register select bit
 
-class StepMotor: public Print {
+class RotaryEncoder: public Print {
   public:
-    StepMotor(int enablue, int direction, int step);
+    RotaryEncoder(int enablue, int direction, int step);
     int move(int speed);
     void setDirection(int dir);
     void begin(uint8_t cols, uint8_t rows, uint8_t charsize = LCD_5x8DOTS );

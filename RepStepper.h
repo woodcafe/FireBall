@@ -58,10 +58,6 @@ class RepStepper {
     int number_of_steps;		// total number of steps this motor can take
     bool enabled;				//are we enabled?
     bool direction;				//what is our direction?
-
-    // motor pin numbers:
-
-
   private:
     byte step_pin;        // the step signal pin.
     byte direction_pin;			// the direction pin.

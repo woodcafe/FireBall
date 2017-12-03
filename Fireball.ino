@@ -1,19 +1,23 @@
+
 #include <LiquidCrystal.h>
+
 #include "RepStepper.h"
+#include "WIFI8266.h"
 
 LiquidCrystal lcd(16, 17, 23, 25, 27, 29);
 
+// WIFI8266   wf(58,57); // RX,TX
+WIFI8266  wcon(62, 57); // RX,TX
 
-// RepStepper(int number_of_steps, byte dir_pin, byte step_pin, byte enable_pin);
-RepStepper motorX(400, 55, 54, 38 );
+RepStepper motorX(400, 55, 54, 38 ); //   RepStepper(int number_of_steps, byte dir_pin, byte step_pin, byte enable_pin);
 RepStepper motorY(400, 61, 60, 56 );
-RepStepper motorZ(400, 48, 46 , 62 );
+// RepStepper motorZ(400, 48, 46 , 62 );
 RepStepper motorE1(400, 28, 26 , 24 );
 RepStepper motorE2(400, 34, 36 , 30 );
 
-// *********************************************************************
-// ** PIN DEFINE
-// *********************************************************************
+// ##########################################################################
+// ###  PIN DEFINE
+// ##########################################################################
 
 int pinBuzz = 37;
 
@@ -25,14 +29,45 @@ enum RotaryEncoder {
 
 int posCur = 0;
 int arrCur = 0;
+int value = 1000;
+int prev = value;
+int offset = 0;
+
+
+String remain;
+int getInt(String debug, String mark) {
+  //  Serial.println(debug);
+  String value = remain.substring(0, remain.indexOf(mark));
+  // Serial.println( value.c_str());
+  remain = remain.substring(remain.indexOf(mark) + 1, remain.length() ); // add marker size
+  // Serial.println( remain.c_str());
+  return value.toInt();
+}
+
+float getCodeFloat(String debug, String mark) {
+  //  Serial.println(debug);
+  String value = remain.substring(1, remain.indexOf(mark));
+  // Serial.println( value.c_str());
+  remain = remain.substring(remain.indexOf(mark) + 1, remain.length() ); // add marker size
+  // Serial.println( remain.c_str());
+  float v = value.toFloat();
+  return v;
+}
 
 void setup()
 {
+  Serial.begin(9600);
+  Serial.println("Program Start()");
+  //  String s = "999 +IPD,0,38:G1 X10.111232 Y-20.224455 Z30.9366644";
+  //  Serial.println(  s.c_str());
+
+
+
+
   lcd.begin(20, 4);
   lcd_print(0, "FireBALL 17B1015-1");
 
-  Serial.begin(9600);
-  Serial.println("Program Start()");
+  wcon.begin();
   pinMode(pinBuzz, OUTPUT);
   pinMode(pinRotaryEncoderA, INPUT_PULLUP);
   pinMode(pinRotaryEncoderB, INPUT_PULLUP);
@@ -40,27 +75,45 @@ void setup()
   motorE2.disable();
   motorX.disable();
   motorY.disable();
+   
 }
 
-// ******************************************
-// *** CONFIG
-// ******************************************
-
-int value = 1000;
-int prev = value;
-int offset = 0;
+char buf[512];
 
 void loop()
 {
+
+  //  wcon.testTerminal();
+  int count = wcon.rxPDU(buf, 200);
+  if ( count > 0 ) {
+    remain = String(buf);
+    remain = remain.substring(remain.indexOf("+IPD,") + 5, remain.length());
+    int conId = getInt("conid", ",");
+    int length = getInt("length", ":");
+    float g = getCodeFloat("G", " ");
+    float x = getCodeFloat("X", " ");
+    float y = getCodeFloat("Y", " ");
+    float z = getCodeFloat("Z", " ");
+    lcd_print(1, "x =", x);
+    lcd_print(2, "x =", y);
+    lcd_print(3, "x =", z);
+
+    moveY( y,   motorY);
+
+    wcon.txPDU("OK RECEVED", count, conId);
+  }
+  return;
+  lcd_print(1, "1) TEMINAL MODE");
+  return;
   testMotor();
   value = readRotaryEncoder(value);
   offset = value - prev;
   prev = value;
 }
 
-// ******************************************
-// ** TUNNING MOTORS
-// ******************************************
+// ##############################################################
+// ### TUN MOTOR
+// ##############################################################
 
 // 800 = 160mm, 5 = 10mm
 
