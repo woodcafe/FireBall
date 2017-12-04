@@ -83,8 +83,8 @@ int scanInt(char debug[], char mark[]) {
   int pos = indexOf(&rxBuf[sp], mark);
   rxBuf[sp + pos] = 0;
   int value = atoi(&rxBuf[sp]);
- // sprintf(msgBuf, "\n <%s>=<int:%d> from <%s>", debug,  value, &rxBuf[sp]);
- // Serial.print(msgBuf);
+  // sprintf(msgBuf, "\n <%s>=<int:%d> from <%s>", debug,  value, &rxBuf[sp]);
+  // Serial.print(msgBuf);
   sp += pos + length(mark);
   return value;
 }
@@ -95,8 +95,8 @@ float scanFloat(char debug[], char mark[]) {
   rxBuf[sp + pos] = 0;
   float value = atof(&rxBuf[sp]);
   dtostrf(value, 9, 6, buf2);
-   sprintf(msgBuf, "\n <%s>=<float:%s> from <%s> = freeRam =%d", debug,  buf2, &rxBuf[sp], freeRam());
-   Serial.print(msgBuf);
+  sprintf(msgBuf, "\n <%s>=<float:%s> from <%s> = freeRam =%d", debug,  buf2, &rxBuf[sp], freeRam());
+  Serial.print(msgBuf);
   sp += pos + length(mark);
   return value;
 }
@@ -125,6 +125,7 @@ boolean parsePDU(char buf[]) {
     lcd_print(1, "X ", x);
     lcd_print(2, "Y ", y);
     lcd_print(3, "Z ", z);
+     moveY( y,   motorY);
     return true;
   } else {
     return false;
@@ -153,7 +154,10 @@ void setup()
 void loop()
 {
 
-  //  wcon.testTerminal();
+  if ( false) {
+    wcon.testTerminal();
+    return;
+  }
   int count = wcon.rxPDU(rxBuf, 200);
   if ( count > 0 ) {
     if ( parsePDU(rxBuf)) {
@@ -386,11 +390,11 @@ int readRotaryEncoder(int value) {
           value -= inc;
         }
         beep(1);
-        lcd_print(2, value);
+  //      lcd_print(2, value);
         count = 0;
       }  else if ( !encoder_BTN) {
         //   debugf("count = %d", count);
-        lcd_print(2, value);
+   //     lcd_print(2, value);
         if ( count++ > 50) {
           beep(50);
           break;

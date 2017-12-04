@@ -47,9 +47,11 @@ void WIFI8266:: begin() {
 }
 
 void WIFI8266::testTerminal() {
-  int count = flushEspBuffer(500);
+  int count = pushBuf(500);
   if ( count > 0 ) {
     Serial.print(espBuffer);
+    top =0;
+    espBuffer[top] = 0;
   }
   count = 0;
   while (Serial.available() ) {
@@ -95,7 +97,7 @@ int WIFI8266:: pushBuf(int timeout) {
 
 void  WIFI8266::txPDU (String msg, int conId) {
   _printf("\ntxPDU length=%d, conid=%d msg=%s free = %d", msg.length(), conId, msg.c_str(), 0);
-//  sprintf(espTxBuffer, " AT+CIPSEND=%d,%d\r\n", conId, xx);
+  //  sprintf(espTxBuffer, " AT+CIPSEND=%d,%d\r\n", conId, xx);
   String cipSend = "AT+CIPSEND=";
   cipSend += conId;
   cipSend += ",";
@@ -106,9 +108,9 @@ void  WIFI8266::txPDU (String msg, int conId) {
   sendData(msg.c_str(), 500, true);
 }
 
-void  WIFI8266:: sendData(char cmd[], const int timeout, boolean debug) {
+void  WIFI8266:: sendData(String cmd, const int timeout, boolean debug) {
   softSerial->print(cmd);
-  _printf("###::cmdRequest<%s> ", cmd);
+  _printf("###::cmdRequest<%s> ", cmd.c_str());
   {
     int count = pushBuf(timeout);
     _printf("### cmdResponse::espBuffer[%d]=<%s> ", count, espBuffer);

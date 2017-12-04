@@ -18,10 +18,10 @@ class WIFI8266 {
     int  rxPDU(char dstBuf[], int size);
     void clear();
     int  copyBuf(char dstBuf[], int size);
-    int WIFI8266:: pullBufferTill(int timeout, char dstBuf[], char findWord[], int findSize);
-    void sendData(char dstBuf[], const int timeout, boolean debug);
+  
+    void sendData(String cmd, const int timeout, boolean debug);
     void clearEspBuffer();
-    int  flushEspBuffer( int timeout) ;
+    
 
   private:
     int top;
