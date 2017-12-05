@@ -125,7 +125,7 @@ boolean parsePDU(char buf[]) {
     lcd_print(1, "X ", x);
     lcd_print(2, "Y ", y);
     lcd_print(3, "Z ", z);
-     moveY( y,   motorY);
+    moveY( y,   motorY);
     return true;
   } else {
     return false;
@@ -154,7 +154,7 @@ void setup()
 void loop()
 {
 
-  if ( false) {
+  if ( true ) {
     wcon.testTerminal();
     return;
   }
@@ -390,11 +390,11 @@ int readRotaryEncoder(int value) {
           value -= inc;
         }
         beep(1);
-  //      lcd_print(2, value);
+        //      lcd_print(2, value);
         count = 0;
       }  else if ( !encoder_BTN) {
         //   debugf("count = %d", count);
-   //     lcd_print(2, value);
+        //     lcd_print(2, value);
         if ( count++ > 50) {
           beep(50);
           break;

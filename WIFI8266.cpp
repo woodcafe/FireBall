@@ -46,20 +46,29 @@ void WIFI8266:: begin() {
   sendData( "AT+CIPSERVER=1,80\r\n" , 1000, true);  // turn on server on port 80
 }
 
+
+// #######################################################################
+// ###  TERMINAL MODE
+// #######################################################################
+
 void WIFI8266::testTerminal() {
   int count = pushBuf(500);
   if ( count > 0 ) {
     Serial.print(espBuffer);
-    top =0;
+    top = 0;
     espBuffer[top] = 0;
   }
   count = 0;
+  String s = String();
   while (Serial.available() ) {
-    softSerial->write(Serial.read());
-    count++;
+    s += Serial.read();
+    //    softSerial->write(Serial.read());
+    //    count++;
   }
-  if ( count > 0 ) {
-    Serial.print("[WIFI] >>");
+  softSerial->write(s.c_str());
+  if ( s.length() > 0) {
+    Serial.print("\n[WIFI] >>");
+    Serial.print(s.c_str());
   }
 }
 
@@ -70,7 +79,7 @@ void WIFI8266::testTerminal() {
 
 
 // #######################################################################
-// ## TX FROM EPS
+// ###  TX FROM EPS
 // #######################################################################
 
 int WIFI8266:: pushBuf(int timeout) {
@@ -110,10 +119,13 @@ void  WIFI8266::txPDU (String msg, int conId) {
 
 void  WIFI8266:: sendData(String cmd, const int timeout, boolean debug) {
   softSerial->print(cmd);
-  _printf("###::cmdRequest<%s> ", cmd.c_str());
   {
-    int count = pushBuf(timeout);
-    _printf("### cmdResponse::espBuffer[%d]=<%s> ", count, espBuffer);
+    int n = pushBuf(timeout);
+    if ( n <= 0 ) {
+      _printf("[ERROR] ESP8266 is not responsed cmd = %s" , cmd.c_str() );
+      return;
+    }
+    _printf("### cmdResponse::espBuffer[%d]=<%s> ", n, espBuffer);
     int pos = indexAfter(0, "OK\n\n", 4);
     if ( pos > 0 ) {
       copyBuf( dstBuf, pos + 4);
@@ -123,9 +135,6 @@ void  WIFI8266:: sendData(String cmd, const int timeout, boolean debug) {
         copyBuf( dstBuf, pos + 7);
       }
     }
-    //   _printf("Total Read : espBuf[%d] indexOf[%d] ,<%s>", top, pos,  espBuffer );
-    //   _printf("Rest  Read : espBuf[%d]             ,dstBuf = <%s>", top,   dstBuf );
-    //  _printf("###rxCmdRsp::%s###%s", cmd, dstBuf);
   }
 }
 // #######################################################################
@@ -137,7 +146,7 @@ int WIFI8266:: rxPDU(char rxBuf[], int timeout) {
   int posEND = -1;
   while ( posIPD < 0 || posEND < 0 ) {
     int n = pushBuf(timeout);
-    _printf("rxPDU_NOK::rxCount=%d, bufTop=%d buf=%s", n, top, espBuffer);
+    //   _printf("rxPDU_NOK::rxCount=%d, bufTop=%d buf=%s", n, top, espBuffer);
     if ( top > 0  ) {
       int pos = indexAfter(0, "OK", 2);
       posIPD  = indexAfter(0, "IPD,", 4);
