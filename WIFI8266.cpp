@@ -30,7 +30,7 @@ void  _printf(char *fmt, ...) {
 WIFI8266::WIFI8266(int rxpin, int txpin)
 {
   pinMode(txpin, OUTPUT);
-  pinMode(rxpin, INPUT);
+  pinMode(rxpin, INPUT_PULLUP);
   softSerial  = new SoftwareSerial(rxpin, txpin);
 }
 
@@ -52,23 +52,24 @@ void WIFI8266:: begin() {
 // #######################################################################
 
 void WIFI8266::testTerminal() {
+  // Read Serial
   int count = pushBuf(500);
   if ( count > 0 ) {
     Serial.print(espBuffer);
     top = 0;
     espBuffer[top] = 0;
   }
-  count = 0;
   String s = String();
   while (Serial.available() ) {
-    s += Serial.read();
-    //    softSerial->write(Serial.read());
-    //    count++;
+    char c = Serial.read();
+    s += c;
+    Serial.write(c);
   }
-  softSerial->write(s.c_str());
+  // Write WIFI
   if ( s.length() > 0) {
-    Serial.print("\n[WIFI] >>");
-    Serial.print(s.c_str());
+    softSerial->write(s.c_str()); // send to wifi
+    Serial.print("\n[WIFI]> ");
+    Serial.flush();
   }
 }
 
