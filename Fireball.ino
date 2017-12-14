@@ -7,7 +7,8 @@
 LiquidCrystal lcd(16, 17, 23, 25, 27, 29);
 
 // WIFI8266   wf(58,57); // RX,TX
-WIFI8266  wcon(62, 57); // RX,TX
+//  WIFI8266  wcon(12, 13); // RX,TX
+WIFI8266  wcon(62,48); // RXX,TX 62
 
 RepStepper motorX(400, 55, 54, 38 ); //   RepStepper(int number_of_steps, byte dir_pin, byte step_pin, byte enable_pin);
 RepStepper motorY(400, 61, 60, 56 );
@@ -46,6 +47,8 @@ char msgBuf[MSIZE];
 // ## BUF SUPPORT
 // ##############################################################
 
+
+  
 int length(char buf[]) {
   for (int i = 0; i < 255; i++) {
     if ( buf[i] == 0 ) {
@@ -125,12 +128,18 @@ boolean parsePDU(char buf[]) {
     lcd_print(1, "X ", x);
     lcd_print(2, "Y ", y);
     lcd_print(3, "Z ", z);
-     moveY( y,   motorY);
+    moveY( y,   motorY);
     return true;
   } else {
     return false;
   }
 }
+//  ______ _          ____        _ _   ___   ___  __ ______ 
+// |  ____(_)        |  _ \      | | | |__ \ / _ \/_ |____  |
+// | |__   _ _ __ ___| |_) | __ _| | |    ) | | | || |   / / 
+// |  __| | | '__/ _ \  _ < / _` | | |   / /| | | || |  / /  
+// | |    | | | |  __/ |_) | (_| | | |  / /_| |_| || | / /   
+// |_|    |_|_|  \___|____/ \__,_|_|_| |____|\___/ |_|/_/    
 
 void setup()
 {
@@ -141,6 +150,7 @@ void setup()
   lcd_print(0, "FireBall V1.00 17W48");
 
   wcon.begin();
+  
   pinMode(pinBuzz, OUTPUT);
   pinMode(pinRotaryEncoderA, INPUT_PULLUP);
   pinMode(pinRotaryEncoderB, INPUT_PULLUP);
@@ -154,7 +164,7 @@ void setup()
 void loop()
 {
 
-  if ( false) {
+  if ( true ) {
     wcon.testTerminal();
     return;
   }
@@ -390,11 +400,11 @@ int readRotaryEncoder(int value) {
           value -= inc;
         }
         beep(1);
-  //      lcd_print(2, value);
+        //      lcd_print(2, value);
         count = 0;
       }  else if ( !encoder_BTN) {
         //   debugf("count = %d", count);
-   //     lcd_print(2, value);
+        //     lcd_print(2, value);
         if ( count++ > 50) {
           beep(50);
           break;
