@@ -22,9 +22,6 @@
 #ifndef RepStepper_h
 #define RepStepper_h
 
-// #include "WConstants.h"
-// #include <inttypes.h>
-//#include <Wire.h>
 #include "Arduino.h"
  
 
