@@ -3,7 +3,7 @@ import time
 from threading import Thread
 from optparse import OptionParser
 
-class Cnc:
+class Sander:
     def __init__(self, port='COM3', baud=9600):
         self.ser = serial.Serial(port=port, baudrate=baud,
             parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
@@ -15,18 +15,29 @@ class Cnc:
         
     def write(self, msg):
         self.ser.write(msg.encode())
-        print(msg)
+        print(">>>"+msg)
+        output = self.ser.readline();
+        print("<<<"+output)
     
-    def go(self, x=0, y=0, z=0, s=0):
-        msg = 'G0 X%d Y%d Z%d F%d\n' % (z, y, x*-1, s)
-        self.write(msg)
-        time.sleep(1)
-        msg = 'G0 X%d Y%d Z%d F%d\n' % (0,0,0, s)
-        self.write(msg)
-        
-    def sendCmd(self, x,y,z):
-        msg = 'G0 X'+str(z)+' Y'+str(y)+' Z'+str(x)
-        self.ser.write((msg+' F8\n').encode())
+    def move(self, x=0, y=0, z=0, sleep=5):
+        if x:
+            msg = 'G0 Z%d\n' % (x)
+            self.write(msg)
+        if y:
+            msg = 'G0 Y%d\n' % (y)
+            self.write(msg)
+        if z:
+            msg = 'G0 X%d\n' % (z)
+            self.write(msg)
+        time.sleep(sleep)
+    
+    def go(self, x=0, y=0, z=0, xstep=10, ystep=100):
+        for v in range(0, y, ystep):
+            for u in range(0, x, xstep):
+                self.move(x=u)
+            for u in range(x, 0-xstep, xstep*-1):
+                self.move(x=u)
+            self.move(y=v)
 
 def main():
     parser = OptionParser()
@@ -38,9 +49,8 @@ def main():
     parser.add_option('-s', '--speed', type='int', dest='s', help='speed', default=4)    
     options, args = parser.parse_args()
     
-#    cnc = Cnc()
-    cnc = Cnc(options.port, options.baud)
-    cnc.go(options.x, options.y, options.z, options.s)
+    cnc = Sander(options.port, options.baud)
+    cnc.go(options.x, options.y, options.z)
     
 
 if __name__ == "__main__":
