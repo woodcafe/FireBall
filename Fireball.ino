@@ -8,7 +8,7 @@ LiquidCrystal lcd(16, 17, 23, 25, 27, 29);
 
 // WIFI8266   wf(58,57); // RX,TX
 //  WIFI8266  wcon(12, 13); // RX,TX
-WIFI8266  wcon(62,48); // RXX,TX 62
+WIFI8266  wcon(62, 48); // RXX,TX 62
 
 RepStepper motorX(400, 55, 54, 38 ); //   RepStepper(int number_of_steps, byte dir_pin, byte step_pin, byte enable_pin);
 RepStepper motorY(400, 61, 60, 56 );
@@ -48,7 +48,7 @@ char msgBuf[MSIZE];
 // ##############################################################
 
 
-  
+
 int length(char buf[]) {
   for (int i = 0; i < 255; i++) {
     if ( buf[i] == 0 ) {
@@ -93,12 +93,12 @@ int scanInt(char debug[], char mark[]) {
 }
 
 float scanFloat(char debug[], char mark[]) {
-  char buf2[10];
+  char buf2[50];
   int pos = indexOf(&rxBuf[sp], mark);
-  rxBuf[sp + pos] = 0;
   float value = atof(&rxBuf[sp]);
+  rxBuf[sp + pos] = 0;
   dtostrf(value, 9, 6, buf2);
-  sprintf(msgBuf, "\n <%s>=<float:%s> from <%s> = freeRam =%d", debug,  buf2, &rxBuf[sp], freeRam());
+  sprintf(msgBuf, "\n <%s>=<float:%s> from <%s>   ", debug,  buf2, &rxBuf[sp]  );
   Serial.print(msgBuf);
   sp += pos + length(mark);
   return value;
@@ -111,6 +111,8 @@ int freeRam ()
   return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
 
+
+
 boolean parsePDU(char buf[]) {
   int cp = indexOf(&rxBuf[0], "+IPD,");
   if ( cp > 0 ) {
@@ -120,26 +122,29 @@ boolean parsePDU(char buf[]) {
     sp ++;
     scanInt("G-Code", " ");
     sp ++;
-    float x = scanFloat("X axis", " ");
+    float   x = scanFloat("X axis", " ");
     sp ++;
-    float y = scanFloat("Y axis", " ");
+    float   y = scanFloat("Y axis", " ");
     sp ++;
     float z =  scanFloat("Z axis", " ");
     lcd_print(1, "X ", x);
     lcd_print(2, "Y ", y);
     lcd_print(3, "Z ", z);
-    moveY( y,   motorY);
+    moveY( y, motorY);
+    //   moveY( x, motorY);
+    moveX( x, motorX , motorE2);
+    moveY( z,  motorE1);
     return true;
   } else {
     return false;
   }
 }
-//  ______ _          ____        _ _   ___   ___  __ ______ 
+//  ______ _          ____        _ _   ___   ___  __ ______
 // |  ____(_)        |  _ \      | | | |__ \ / _ \/_ |____  |
-// | |__   _ _ __ ___| |_) | __ _| | |    ) | | | || |   / / 
-// |  __| | | '__/ _ \  _ < / _` | | |   / /| | | || |  / /  
-// | |    | | | |  __/ |_) | (_| | | |  / /_| |_| || | / /   
-// |_|    |_|_|  \___|____/ \__,_|_|_| |____|\___/ |_|/_/    
+// | |__   _ _ __ ___| |_) | __ _| | |    ) | | | || |   / /
+// |  __| | | '__/ _ \  _ < / _` | | |   / /| | | || |  / /
+// | |    | | | |  __/ |_) | (_| | | |  / /_| |_| || | / /
+// |_|    |_|_|  \___|____/ \__,_|_|_| |____|\___/ |_|/_/
 
 void setup()
 {
@@ -150,12 +155,13 @@ void setup()
   lcd_print(0, "FireBall V1.00 17W48");
 
   wcon.begin();
-  
+
   pinMode(pinBuzz, OUTPUT);
   pinMode(pinRotaryEncoderA, INPUT_PULLUP);
   pinMode(pinRotaryEncoderB, INPUT_PULLUP);
   pinMode(pinRotaryEncoderButton, INPUT_PULLUP);
   motorE2.disable();
+  motorE1.disable();
   motorX.disable();
   motorY.disable();
 
@@ -164,7 +170,7 @@ void setup()
 void loop()
 {
 
-  if ( true ) {
+  if (false ) {
     wcon.testTerminal();
     return;
   }
@@ -337,35 +343,35 @@ void lcd_print(int row, char* msg ) {
 }
 
 void lcd_print(int row, char* format, float value) {
-  char buf[20];
-  char buf2[20];
+  char buf[100];
+  char buf2[100];
   lcd.setCursor(0, row);
   dtostrf(value, 10, 6, buf2);
   sprintf (buf, "%-3s = %9s mm", format, buf2);
   lcd.print(buf);
 }
-
-void lcd_print(int row,  char* format , long value) {
-  char buf[20];
-  char buf2[20];
-  lcd.setCursor(0, row);
-  sprintf (buf, format,   value);
-  lcd.print(buf);
-}
+//
+//void lcd_print(int row,  char* format , long value) {
+//  char buf[100];
+//  char buf2[100];
+//  lcd.setCursor(0, row);
+//  sprintf (buf, format,   value);
+//  lcd.print(buf);
+//}
 
 void lcd_print(int row,  char* format , int value) {
-  char buf[20];
-  char buf2[20];
+  char buf[100];
+  char buf2[100];
   lcd.setCursor(0, row);
   sprintf (buf, format,   value);
   lcd.print(buf);
 }
-
-void debugf (char* format, int value ) {
-  char buf[20];
-  sprintf (buf,  format, value);
-  Serial.println(buf);
-}
+//
+//void debugf (char* format, int value ) {
+//  char buf[20];
+//  sprintf (buf,  format, value);
+//  Serial.println(buf);
+//}
 
 
 int readRotaryEncoder(int value) {
