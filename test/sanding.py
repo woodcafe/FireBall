@@ -20,6 +20,8 @@ class Cnc(object):
             self.ser.readlines();
         
     def write(self, msg):
+        if not self.ser:
+            self.open()
         self.ser.write(msg.encode())
         print(">>>"+msg)
         output = self.ser.readline();
@@ -28,8 +30,6 @@ class Cnc(object):
         print("<<<"+str(output))
     
     def move(self, x=None, y=None, z=None, stay=0):
-        if not self.ser:
-            self.open()
         print('cnc:move x=%s y=%s z=%s stay=%d' %(x, y, z, stay))
         msg = 'G0 '
         if x != None:
@@ -69,6 +69,27 @@ class Gallery(Cnc):
             super().move(z=10)
             super().move(0)
             super().move(z=0)
+            
+class GReader(Cnc):
+    def __init__(self, opts, args):
+        Cnc.__init__(self)
+        if args:
+            self.fname = args[0]
+            
+    def move(self, x=0, y=0, z=0):
+        f = open(self.fname)
+        for line in f:
+            if line.startswith('M'):
+                if '30' in line: #down
+                    super().move(z=-10)
+                if '50' in line: #up
+                    super().move(z=0)
+                continue
+            if line.startswith('G4'):
+                continue
+            line = line.replace('X-', 'Z')
+            super().write(line)
+            time.sleep(0.2)
     
 def main():
     parser = OptionParser()
@@ -79,6 +100,7 @@ def main():
     parser.add_option('-b', '--baud', type='int', dest='baud', help='baud rate', default=9600)
     parser.add_option('-s', '--sand', action='store_true', dest='s', help='sand second')    
     parser.add_option('-g', '--gallery', action='store_true', dest='g', help='gallery hole')    
+    parser.add_option('-f', '--file', action='store_true', dest='f', help='gcode file name')    
     options, args = parser.parse_args()
     
     cnc = Cnc()
@@ -86,6 +108,8 @@ def main():
         cnc = Sander(options, args)
     elif options.g:
         cnc = Gallery()
+    elif options.f:
+        cnc = GReader(options, args)
     cnc.move(options.x, options.y, options.z)
 
 if __name__ == "__main__":
