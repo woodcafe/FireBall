@@ -59,6 +59,17 @@ class Sander(Cnc):
             for u in range(x, 0, xstep*-1):
                 super().move(x=u, stay=self.stay)
 
+class Gallery(Cnc):
+    def move(self, x=0, y=0, z=0):
+        xx = 30
+        yy = 40
+        print('Gallery:move x=%s y=%s z=%s' %(x, y, z))
+        for i in range(int(y/yy)):
+            super().move(xx, yy*(i+1))
+            super().move(z=10)
+            super().move(0)
+            super().move(z=0)
+    
 def main():
     parser = OptionParser()
     parser.add_option('-x', '--x', type='int', dest='x', help='x mm length', default=0)
@@ -67,11 +78,14 @@ def main():
     parser.add_option('-p', '--port', dest='port', help='serial port', default='COM3')
     parser.add_option('-b', '--baud', type='int', dest='baud', help='baud rate', default=9600)
     parser.add_option('-s', '--sand', action='store_true', dest='s', help='sand second')    
+    parser.add_option('-g', '--gallery', action='store_true', dest='g', help='gallery hole')    
     options, args = parser.parse_args()
     
     cnc = Cnc()
     if options.s:
         cnc = Sander(options, args)
+    elif options.g:
+        cnc = Gallery()
     cnc.move(options.x, options.y, options.z)
 
 if __name__ == "__main__":
