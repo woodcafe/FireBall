@@ -89,7 +89,7 @@ class GReader(Cnc):
                 continue
             line = line.replace('X-', 'Z')
             super().write(line)
-            time.sleep(0.2)
+            time.sleep(1)
     
 def main():
     parser = OptionParser()
