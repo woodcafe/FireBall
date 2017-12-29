@@ -1,7 +1,58 @@
+
+# -*- coding: utf8 -*-
+
 import serial
 import time
 from threading import Thread
 from optparse import OptionParser
+
+CNC = serial.Serial(port='COM3', baudrate="9600",
+            parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
+            bytesize=serial.EIGHTBITS, timeout=0)
+
+def sendG(msg):
+    msg2 = 'G0 '+msg+" \n"
+    print("CODE :::::::: "+msg2)
+    CNC.write(msg2.encode())
+    
+def init():
+    print("init")
+    time.sleep(3)
+    if CNC.isOpen():
+        print("opened")
+        CNC.write('?\n\r'.encode())
+        CNC.write('$x\n'.encode())
+        for y in range(2,20,2):
+            move(y)
+            drill()
+            time.sleep(3)
+        sendG("Z-10")
+        sendG("Y0")
+        move(0)
+        sendG('X0 Y0 Z0 \n' )
+        print("end")
+        time.sleep(20)
+        CNC.close()
+        
+def drill():
+    CNC.write('G0 Z-10\n'.encode())
+    CNC.write('G0 Z0\n'.encode())
+    
+def move (y):
+    print("MOVE ....")
+    sendG('Z0')
+    sendG('Y'+str(y))
+  
+        
+def readThread(ser):
+    line = []
+    print("readThrea run")
+    while CNC.isOpen():
+        c =  CNC.readline()
+        if ( len(c) > 0 ):
+            print(str(c))
+           #     del line[:]            
+    print("readThrea end")      
 
 class Cnc(object):
     def __init__(self, port='COM3', baud=9600):
@@ -103,28 +154,13 @@ class Test(Cnc):
             time.sleep(5)
     
 def main():
-    parser = OptionParser()
-    parser.add_option('-x', '--x', type='int', dest='x', help='x mm length', default=0)
-    parser.add_option('-y', '--y', type='int', dest='y', help='y mm length', default=0)
-    parser.add_option('-z', '--z', type='int', dest='z', help='z mm length', default=0)
-    parser.add_option('-p', '--port', dest='port', help='serial port', default='COM3')
-    parser.add_option('-b', '--baud', type='int', dest='baud', help='baud rate', default=9600)
-    parser.add_option('-s', '--sand', action='store_true', dest='s', help='sand second')    
-    parser.add_option('-g', '--gallery', action='store_true', dest='g', help='gallery hole')    
-    parser.add_option('-f', '--file', action='store_true', dest='f', help='gcode file name')    
-    parser.add_option('-t', '--test', action='store_true', dest='t', help='test')    
-    options, args = parser.parse_args()
-    
-    cnc = Cnc()
-    if options.s:
-        cnc = Sander(options, args)
-    elif options.g:
-        cnc = Gallery()
-    elif options.f:
-        cnc = GReader(options, args)
-    elif options.t:
-        cnc = Test(options, args)
-    cnc.move(options.x, options.y, options.z)
+    thread = Thread(target=readThread, args=(CNC,))
+    thread.start()
+    print("start")
+    init()
+ 
+
 
 if __name__ == "__main__":
     main()
+
