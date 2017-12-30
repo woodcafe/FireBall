@@ -38,17 +38,14 @@ def init():
         print("**** opened *****")
         sendCmd('?')
         sendCmd('$x')
-        for y in range (0,150,5):
-            for x in range(0, 60, 5):
-                sendCmd('G0 X%d y%d '% (x, y))
-                drill()
+        sendCmd('Z-10')
 #         drillBox(5,4,2,2) #2,18
 #         drillBox(5,12,2,2) #6,20
 #         for y in range(0,201,5):
 #              drill()
 #              move(y)
 # #         moveDrill(0)
-        sendCmd('G0 X0 Y0 Z0 ' )
+        
     CNC.close()
     
 def drillBox2(width, height): 
