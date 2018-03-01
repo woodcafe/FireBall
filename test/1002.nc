@@ -1,0 +1,27 @@
+%
+(1002)
+(T1  D=6 CR=0 - ZMIN=-6 - flat end mill)
+G90 G94
+G17
+G21
+G28 G91 Z0
+G90
+
+(Drill1)
+M9
+T1 M6
+S10000 M3
+G54
+M8
+G0 X0 Y0
+Z15
+Z5
+Z4
+G1 Z-6 F30
+G0 Z5
+Z15
+M9
+G28 G91 Z0
+G28 X0 Y0
+M30
+%
